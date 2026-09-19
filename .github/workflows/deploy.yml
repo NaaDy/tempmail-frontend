@@ -7,6 +7,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      - name: Deploy to Cloudflare
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          ACCOUNT_ID: bdca38998b5059e6119e61a5da1f4f38
+        run: |
+          WORKER_CODE=$(cat worker.js)
+          BOUNDARY="----CloudflareBoundary$(date +%s)"
+          METADATA='{"main_module":"worker.js","bindings":[{"type":"kv_namespace","name":"MAIL_KV","namespace_id":"29d11e1797994d8bbe8ac38b22f309aa"}]}'
+          curl -X PUT "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/workers/scripts/tempmail-frontend" \
+            -H "Authorization: Bearer ${CF_TOKEN}" \
+            -H "Content-Type: multipart/form-data; boundary=${BOUNDARY}" \
+            --data-binary "$(printf -- '--%s\r\nContent-Disposition: form-data; name="metadata"\r\nContent-Type: application/json\r\n\r\n%s\r\n--%s\r\nContent-Disposition: form-data; name="worker.js"; filename="worker.js"\r\nContent-Type: application/javascript+module\r\n\r\n' "$BOUNDARY" "$METADATA" "$BOUNDARY")${WORKER_CODE}$(printf -- '\r\n--%s--\r\n' "$BOUNDARY")"
