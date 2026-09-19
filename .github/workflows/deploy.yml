@@ -12,10 +12,53 @@ jobs:
           CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           ACCOUNT_ID: bdca38998b5059e6119e61a5da1f4f38
         run: |
-          WORKER_CODE=$(cat worker.js)
-          BOUNDARY="----CloudflareBoundary$(date +%s)"
-          METADATA='{"main_module":"worker.js","bindings":[{"type":"kv_namespace","name":"MAIL_KV","namespace_id":"29d11e1797994d8bbe8ac38b22f309aa"}]}'
-          curl -X PUT "https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/workers/scripts/tempmail-frontend" \
-            -H "Authorization: Bearer ${CF_TOKEN}" \
-            -H "Content-Type: multipart/form-data; boundary=${BOUNDARY}" \
-            --data-binary "$(printf -- '--%s\r\nContent-Disposition: form-data; name="metadata"\r\nContent-Type: application/json\r\n\r\n%s\r\n--%s\r\nContent-Disposition: form-data; name="worker.js"; filename="worker.js"\r\nContent-Type: application/javascript+module\r\n\r\n' "$BOUNDARY" "$METADATA" "$BOUNDARY")${WORKER_CODE}$(printf -- '\r\n--%s--\r\n' "$BOUNDARY")"
+          python3 << 'PYEOF'
+          import json, os, http.client
+
+          token = os.environ['CF_TOKEN']
+          account_id = os.environ['ACCOUNT_ID']
+
+          with open('worker.js', 'r') as f:
+              worker_code = f.read()
+
+          metadata = json.dumps({
+              'main_module': 'worker.js',
+              'bindings': [{
+                  'type': 'kv_namespace',
+                  'name': 'MAIL_KV',
+                  'namespace_id': '29d11e1797994d8bbe8ac38b22f309aa'
+              }]
+          })
+
+          boundary = '----CloudflareBoundary12345'
+          body = (
+              '--' + boundary + '\r\n' +
+              'Content-Disposition: form-data; name="metadata"\r\n' +
+              'Content-Type: application/json\r\n' +
+              '\r\n' +
+              metadata + '\r\n' +
+              '--' + boundary + '\r\n' +
+              'Content-Disposition: form-data; name="worker.js"; filename="worker.js"\r\n' +
+              'Content-Type: application/javascript+module\r\n' +
+              '\r\n' +
+              worker_code + '\r\n' +
+              '--' + boundary + '--\r\n'
+          ).encode('utf-8')
+
+          conn = http.client.HTTPSConnection('api.cloudflare.com')
+          headers = {
+              'Authorization': 'Bearer ' + token,
+              'Content-Type': 'multipart/form-data; boundary=' + boundary
+          }
+          path = '/client/v4/accounts/' + account_id + '/workers/scripts/tempmail-frontend'
+          conn.request('PUT', path, body=body, headers=headers)
+          resp = conn.getresponse()
+          data = resp.read().decode('utf-8')
+          print('Status:', resp.status)
+          print('Response:', data)
+          if resp.status >= 200 and resp.status < 300:
+              print('SUCCESS!')
+          else:
+              print('FAILED!')
+              exit(1)
+          PYEOF
