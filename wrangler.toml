@@ -1,10 +1,8 @@
 name = "tempmail-frontend"
 main = "worker.js"
 compatibility_date = "2024-09-23"
+account_id = "bdca38998b5059e6119e61a5da1f4f38"
 
 [[kv_namespaces]]
 binding = "MAIL_KV"
 id = "29d11e1797994d8bbe8ac38b22f309aa"
-
-[[email]]
-routing = "toolmongy.store"
