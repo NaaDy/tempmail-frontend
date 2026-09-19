@@ -23,8 +23,6 @@ const HTML = `<!DOCTYPE html>
     body { font-family: 'Inter', system-ui, sans-serif; }
     .fade-in { animation: fadeIn .3s ease-in; }
     @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
-    .email-frame { width:100%; min-height:200px; border:0; display:block; }
-    .email-viewer a { color:#4f46e5; text-decoration:underline; }
   </style>
 </head>
 <body class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 min-h-screen text-slate-100">
@@ -48,14 +46,17 @@ const HTML = `<!DOCTYPE html>
     <section class="bg-white/5 rounded-2xl p-6 border border-white/10 backdrop-blur-sm">
       <label class="text-sm font-medium text-slate-400 mb-2 block">Your temporary email address</label>
       <div class="flex items-center gap-2">
-        <input
-          id="email-prefix"
-          type="text"
-          placeholder="type a prefix or full email"
-          autocomplete="off"
-          spellcheck="false"
-          class="flex-1 bg-slate-900/60 rounded-xl px-4 py-3 text-lg font-mono text-brand-300 outline-none placeholder-slate-600 min-w-0"
-        />
+        <div class="flex-1 flex items-center bg-slate-900/60 rounded-xl overflow-hidden">
+          <input
+            id="email-prefix"
+            type="text"
+            placeholder="type-a-prefix"
+            autocomplete="off"
+            spellcheck="false"
+            class="flex-1 bg-transparent px-4 py-3 text-lg font-mono text-brand-300 outline-none placeholder-slate-600 min-w-0"
+          />
+          <span class="px-3 py-3 text-lg font-mono text-slate-500 shrink-0 select-none">@toolmongy.store</span>
+        </div>
         <button id="copy-btn" onclick="copyEmail()" class="shrink-0 px-4 py-3 rounded-xl bg-brand-600 hover:bg-brand-700 active:scale-95 transition text-white font-medium flex items-center gap-2">
           <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
           <span id="copy-label">Copy</span>
@@ -114,14 +115,9 @@ const HTML = `<!DOCTYPE html>
     }
 
     function getCurrentEmail() {
-      let val = document.getElementById('email-prefix').value.trim().toLowerCase();
-      if (!val) return null;
-      if (val.indexOf('@') !== -1) {
-        val = val.split('@')[0];
-      }
-      val = val.replace(/[^a-z0-9._-]/g, '');
-      if (!val) return null;
-      return val + '@' + DOMAIN;
+      const prefix = document.getElementById('email-prefix').value.trim().toLowerCase().replace(/[^a-z0-9._-]/g, '');
+      if (!prefix) return null;
+      return prefix + '@' + DOMAIN;
     }
 
     function checkInbox() {
@@ -132,12 +128,12 @@ const HTML = `<!DOCTYPE html>
         return;
       }
       currentEmail = email;
-      lastSignature = '';
       document.getElementById('email-prefix').value = email.split('@')[0];
       document.getElementById('inbox').innerHTML =
         '<div class="text-center py-16 text-slate-500"><svg class="w-12 h-12 mx-auto mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg><p class="text-sm">No emails yet. Your inbox is being monitored.</p></div>';
       document.getElementById('inbox-count').textContent = '0 messages';
       document.getElementById('status').innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> Waiting for emails…';
+      lastSignature = '';
       if (pollTimer) clearInterval(pollTimer);
       pollTimer = setInterval(fetchEmails, 5000);
       fetchEmails();
@@ -178,85 +174,18 @@ const HTML = `<!DOCTYPE html>
       } catch { return ''; }
     }
 
-    function computeSignature(emails) {
-      return emails.map(function(e) {
-        return (e.from||'') + '|' + (e.subject||'') + '|' + (e.date||'') + '|' + (e.body||'').substring(0,100);
-      }).join('~~');
-    }
-
-    function linkifyText(text) {
-      var escaped = escapeHtml(text);
-      var urlRegex = /(https?:\/\/[^\s<]+)/gi;
-      return escaped.replace(urlRegex, function(url) {
-        return '<a href="' + url + '" target="_blank" rel="noopener noreferrer" style="color:#818cf8;text-decoration:underline;">' + url + '</a>';
-      });
-    }
-
-    function buildEmailViewer(email) {
-      const htmlContent = email.html || '';
-      const textContent = email.text || email.body || '';
-      const hasHtml = htmlContent && htmlContent.length > 0;
-
-      var wrapper = document.createElement('div');
-      wrapper.className = 'email-viewer mt-3 pt-3 border-t border-white/10';
-
-      if (hasHtml) {
-        var iframe = document.createElement('iframe');
-        iframe.className = 'email-frame';
-        iframe.setAttribute('sandbox', 'allow-same-origin allow-popups allow-top-navigation');
-        iframe.setAttribute('scrolling', 'auto');
-        wrapper.appendChild(iframe);
-
-        var docContent = '<!DOCTYPE html><html><head><meta charset="utf-8"><base target="_blank"><style>' +
-          'body{font-family:Inter,system-ui,sans-serif;font-size:14px;color:#1e293b;padding:12px;margin:0;line-height:1.6;}' +
-          'img{max-width:100%;height:auto;}' +
-          'a{color:#4f46e5;text-decoration:underline;}' +
-          'a:hover{color:#4338ca;}' +
-          'button, .button, [role=button]{cursor:pointer;}' +
-          '</style></head><body>' + htmlContent + '</body></html>';
-
-        iframe.srcdoc = docContent;
-
-        iframe.onload = function() {
-          try {
-            var doc = iframe.contentDocument || iframe.contentWindow.document;
-            var h = Math.max(doc.body.scrollHeight, doc.documentElement.scrollHeight, 200);
-            iframe.style.height = h + 'px';
-          } catch(e) {
-            iframe.style.height = '400px';
-          }
-        };
-
-        setTimeout(function() {
-          try {
-            var doc = iframe.contentDocument || iframe.contentWindow.document;
-            if (doc && doc.body) {
-              var h = Math.max(doc.body.scrollHeight, doc.documentElement.scrollHeight, 200);
-              iframe.style.height = h + 'px';
-            }
-          } catch(e) {}
-        }, 200);
-
-      } else {
-        var div = document.createElement('div');
-        div.className = 'text-sm text-slate-300 whitespace-pre-wrap break-words';
-        div.innerHTML = linkifyText(textContent);
-        wrapper.appendChild(div);
-      }
-
-      return wrapper;
-    }
-
     async function fetchEmails() {
       if (!currentEmail) return;
       try {
         const res = await fetch('/get-email?to=' + encodeURIComponent(currentEmail));
         const data = await res.json();
         const emails = Array.isArray(data) ? data : (data.emails || data.messages || []);
+
+        const sig = emails.map(e => (e.from||'')+'|'+(e.subject||'')+'|'+(e.date||'')).join('||');
+        if (sig === lastSignature) return;
+        lastSignature = sig;
+
         if (emails.length > 0) {
-          var sig = computeSignature(emails);
-          if (sig === lastSignature) return;
-          lastSignature = sig;
           document.getElementById('status').innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400"></span> ' + emails.length + ' message' + (emails.length > 1 ? 's' : '') + ' received';
           document.getElementById('inbox-count').textContent = emails.length + ' message' + (emails.length > 1 ? 's' : '');
           const inbox = document.getElementById('inbox');
@@ -264,7 +193,7 @@ const HTML = `<!DOCTYPE html>
           emails.reverse().forEach(function(email) {
             const from = email.from || email.sender || 'Unknown';
             const subject = email.subject || '(No subject)';
-            const text = email.text || email.body || '';
+            const body = email.body || email.text || email.html || '';
             const date = email.date || email.timestamp || '';
             const card = document.createElement('div');
             card.className = 'fade-in bg-white/5 rounded-xl p-4 border border-white/10 hover:border-white/20 transition cursor-pointer';
@@ -276,14 +205,16 @@ const HTML = `<!DOCTYPE html>
                 '</div>' +
                 '<span class="text-xs text-slate-500 shrink-0">' + escapeHtml(formatTime(date)) + '</span>' +
               '</div>' +
-              '<div class="mt-2 text-sm text-slate-400 line-clamp-2">' + escapeHtml(text.substring(0, 200)) + (text.length > 200 ? '…' : '') + '</div>';
+              '<div class="mt-2 text-sm text-slate-400 line-clamp-2">' + escapeHtml(body.substring(0, 200)) + (body.length > 200 ? '…' : '') + '</div>';
             card.onclick = function() {
-              const expanded = card.querySelector('.email-viewer');
+              const expanded = card.querySelector('.expanded-body');
               if (expanded) {
                 expanded.remove();
               } else {
-                const viewer = buildEmailViewer(email);
-                card.appendChild(viewer);
+                const full = document.createElement('div');
+                full.className = 'expanded-body mt-3 pt-3 border-t border-white/10 text-sm text-slate-300 whitespace-pre-wrap break-words';
+                full.textContent = body;
+                card.appendChild(full);
               }
             };
             inbox.appendChild(card);
@@ -307,27 +238,6 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
-function decodeQuotedPrintable(str) {
-  if (!str) return '';
-  return str
-    .replace(/=\r\n/g, '')
-    .replace(/=\n/g, '')
-    .replace(/=([0-9A-Fa-f]{2})/g, function(_, hex) {
-      return String.fromCharCode(parseInt(hex, 16));
-    })
-    .replace(/=3D/g, '=');
-}
-
-function decodeBase64(str) {
-  try {
-    const cleaned = str.replace(/\s/g, '');
-    const bytes = Uint8Array.from(atob(cleaned), function(c) { return c.charCodeAt(0); });
-    return new TextDecoder('utf-8').decode(bytes);
-  } catch(e) {
-    return str;
-  }
-}
-
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -345,7 +255,7 @@ export default {
     if (url.pathname === '/get-email') {
       const to = url.searchParams.get('to');
       if (!to) {
-        return new Response(JSON.stringify({ error: 'Missing to parameter' }), {
+        return new Response(JSON.stringify({ error: 'Missing "to" parameter' }), {
           status: 400,
           headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
         });
@@ -369,103 +279,31 @@ export default {
   },
 
   async email(message, env, ctx) {
-    const to = message.to.toLowerCase();
-    const from = message.from || 'Unknown';
-    const subject = message.headers.get('subject') || '(No subject)';
+    try {
+      const to = message.to.toLowerCase();
+      const from = message.from || 'Unknown';
+      const subject = message.headers.get('subject') || '(No subject)';
 
-    const raw = await new Response(message.raw).text();
+      const rawBody = await new Response(message.raw).text();
+      let body = rawBody;
+      body = body.replace(/<[^>]*>/g, '').trim();
 
-    let headersSection = raw;
-    let bodySection = raw;
-    const sepIdx = raw.indexOf('\r\n\r\n');
-    if (sepIdx >= 0) {
-      headersSection = raw.substring(0, sepIdx);
-      bodySection = raw.substring(sepIdx + 4);
-    } else {
-      const sep2 = raw.indexOf('\n\n');
-      if (sep2 >= 0) {
-        headersSection = raw.substring(0, sep2);
-        bodySection = raw.substring(sep2 + 2);
-      }
+      const emailEntry = {
+        from: from,
+        subject: subject,
+        body: body.substring(0, 5000),
+        date: new Date().toISOString(),
+      };
+
+      const key = 'inbox:' + to;
+      const existing = await env.MAIL_KV.get(key, 'json');
+      const emails = Array.isArray(existing) ? existing : [];
+      emails.push(emailEntry);
+
+      const trimmed = emails.slice(-50);
+      await env.MAIL_KV.put(key, JSON.stringify(trimmed), { expirationTtl: 86400 });
+    } catch (err) {
+      console.error('EMAIL HANDLER ERROR:', err.message);
     }
-
-    let htmlContent = '';
-    let textContent = '';
-
-    const ctMatch = headersSection.match(/Content-Type:\s*multipart\/[\w.+-]+\s*;\s*boundary\s*=\s*"?([^"\r\n;]+)"?/i);
-
-    if (ctMatch) {
-      const boundary = ctMatch[1].trim();
-      const parts = bodySection.split('--' + boundary);
-
-      for (const part of parts) {
-        const trimmed = part.replace(/^[\r\n]+/, '');
-        if (trimmed === '' || trimmed === '--' || trimmed.startsWith('--')) continue;
-
-        const partSep = trimmed.indexOf('\r\n\r\n');
-        const partSep2 = trimmed.indexOf('\n\n');
-        let partHeaders = '';
-        let partBody = '';
-        if (partSep >= 0) {
-          partHeaders = trimmed.substring(0, partSep);
-          partBody = trimmed.substring(partSep + 4);
-        } else if (partSep2 >= 0) {
-          partHeaders = trimmed.substring(0, partSep2);
-          partBody = trimmed.substring(partSep2 + 2);
-        } else {
-          partBody = trimmed;
-        }
-
-        const encMatch = partHeaders.match(/Content-Transfer-Encoding:\s*(\S+)/i);
-        const encoding = encMatch ? encMatch[1].toLowerCase().trim() : '';
-        if (encoding === 'quoted-printable') {
-          partBody = decodeQuotedPrintable(partBody);
-        } else if (encoding === 'base64') {
-          partBody = decodeBase64(partBody);
-        }
-
-        if (partHeaders.match(/Content-Type:\s*text\/html/i)) {
-          if (!htmlContent) htmlContent = partBody.trim();
-        } else if (partHeaders.match(/Content-Type:\s*text\/plain/i)) {
-          if (!textContent) textContent = partBody.trim();
-        }
-      }
-    } else {
-      let singleBody = bodySection;
-      const encMatch = headersSection.match(/Content-Transfer-Encoding:\s*(\S+)/i);
-      const encoding = encMatch ? encMatch[1].toLowerCase().trim() : '';
-      if (encoding === 'quoted-printable') {
-        singleBody = decodeQuotedPrintable(singleBody);
-      } else if (encoding === 'base64') {
-        singleBody = decodeBase64(singleBody);
-      }
-
-      if (headersSection.match(/Content-Type:\s*text\/html/i) || /<html|<body|<table|<div\s/i.test(singleBody)) {
-        htmlContent = singleBody.trim();
-      } else {
-        textContent = singleBody.trim();
-      }
-    }
-
-    if (!htmlContent && !textContent) {
-      textContent = bodySection.trim();
-    }
-
-    const emailEntry = {
-      from: from,
-      subject: subject,
-      html: htmlContent.substring(0, 50000),
-      text: textContent.substring(0, 50000),
-      body: (htmlContent || textContent).substring(0, 50000),
-      date: new Date().toISOString(),
-    };
-
-    const key = 'inbox:' + to;
-    const existing = await env.MAIL_KV.get(key, 'json');
-    const emails = Array.isArray(existing) ? existing : [];
-    emails.push(emailEntry);
-
-    const trimmed = emails.slice(-50);
-    await env.MAIL_KV.put(key, JSON.stringify(trimmed), { expirationTtl: 86400 });
   },
 };
