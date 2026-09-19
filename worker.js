@@ -55,15 +55,7 @@ const HTML = `<!DOCTYPE html>
             spellcheck="false"
             class="flex-1 bg-transparent px-4 py-3 text-lg font-mono text-brand-300 outline-none placeholder-slate-600 min-w-0"
           />
-          <span class="px-1 py-3 text-lg font-mono text-slate-500 shrink-0 select-none">@</span>
-          <input
-            id="email-domain"
-            type="text"
-            value="toolmongy.store"
-            autocomplete="off"
-            spellcheck="false"
-            class="flex-1 bg-transparent px-3 py-3 text-lg font-mono text-slate-300 outline-none placeholder-slate-600 min-w-0"
-          />
+          <span id="email-suffix" class="px-3 py-3 text-lg font-mono text-slate-500 shrink-0 select-none">@toolmongy.store</span>
         </div>
         <button id="copy-btn" onclick="copyEmail()" class="shrink-0 px-4 py-3 rounded-xl bg-brand-600 hover:bg-brand-700 active:scale-95 transition text-white font-medium flex items-center gap-2">
           <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
@@ -123,9 +115,9 @@ const HTML = `<!DOCTYPE html>
 
     function getCurrentEmail() {
       const prefix = document.getElementById('email-prefix').value.trim().toLowerCase().replace(/[^a-z0-9._-]/g, '');
-      const domainEl = document.getElementById('email-domain');
-      const domain = (domainEl ? domainEl.value : 'toolmongy.store').trim().toLowerCase().replace(/[^a-z0-9.-]/g, '');
-      if (!prefix || !domain) return null;
+      if (!prefix) return null;
+      const suffixEl = document.getElementById('email-suffix');
+      const domain = suffixEl ? suffixEl.textContent.replace('@', '').trim() : 'toolmongy.store';
       return prefix + '@' + domain;
     }
 
@@ -138,7 +130,6 @@ const HTML = `<!DOCTYPE html>
       }
       currentEmail = email;
       document.getElementById('email-prefix').value = email.split('@')[0];
-      document.getElementById('email-domain').value = email.split('@')[1];
       document.getElementById('inbox').innerHTML =
         '<div class="text-center py-16 text-slate-500"><svg class="w-12 h-12 mx-auto mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg><p class="text-sm">No emails yet. Your inbox is being monitored.</p></div>';
       document.getElementById('inbox-count').textContent = '0 messages';
@@ -223,7 +214,7 @@ const HTML = `<!DOCTYPE html>
             const subject = email.subject || '(No subject)';
             const body = email.body || email.text || email.html || '';
             const date = email.date || email.timestamp || '';
-            const isHtml = /<[a-z][\s\S]*>/i.test(body);
+            const isHtml = email.isHtml || /<[a-z][\s\S]*>/i.test(body);
             const card = document.createElement('div');
             card.className = 'fade-in bg-white/5 rounded-xl p-4 border border-white/10 hover:border-white/20 transition cursor-pointer';
             card.innerHTML =
@@ -319,10 +310,35 @@ export default {
 
       const rawBody = await new Response(message.raw).text();
 
+      let body = '';
+      let isHtml = false;
+
+      const htmlMatch = rawBody.match(/Content-Type:\s*text\/html[\s\S]*?\r?\n\r?\n([\s\S]*?)(?:\r?\n--)/i);
+      if (htmlMatch) {
+        body = htmlMatch[1].trim();
+        body = body.replace(/=\r?\n/g, '').replace(/=([0-9A-F]{2})/g, function(m, p1) {
+          return String.fromCharCode(parseInt(p1, 16));
+        });
+        isHtml = true;
+      } else {
+        const textMatch = rawBody.match(/Content-Type:\s*text\/plain[\s\S]*?\r?\n\r?\n([\s\S]*?)(?:\r?\n--)/i);
+        if (textMatch) {
+          body = textMatch[1].trim();
+          body = body.replace(/=\r?\n/g, '').replace(/=([0-9A-F]{2})/g, function(m, p1) {
+            return String.fromCharCode(parseInt(p1, 16));
+          });
+        } else {
+          const headerEnd = rawBody.indexOf('\r\n\r\n');
+          body = headerEnd >= 0 ? rawBody.substring(headerEnd + 4) : rawBody;
+          isHtml = /<[a-z][\s\S]*>/i.test(body);
+        }
+      }
+
       const emailEntry = {
         from: from,
         subject: subject,
-        body: rawBody.substring(0, 50000),
+        body: body.substring(0, 50000),
+        isHtml: isHtml,
         date: new Date().toISOString(),
       };
 
