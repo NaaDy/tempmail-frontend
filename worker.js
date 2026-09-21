@@ -3,6 +3,7 @@ const HTML = `<!DOCTYPE html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="monetag" content="369e8912fe05b52ce220425e1c2fa23d">
   <title>TempMail — Disposable Email</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
