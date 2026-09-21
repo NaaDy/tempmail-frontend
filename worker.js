@@ -20,7 +20,6 @@ const HTML = `<!DOCTYPE html>
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
   <style>
     body { font-family: 'Inter', system-ui, sans-serif; }
     .fade-in { animation: fadeIn .3s ease-in; }
@@ -28,7 +27,6 @@ const HTML = `<!DOCTYPE html>
   </style>
 </head>
 <body class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 min-h-screen text-slate-100">
-
   <header class="border-b border-white/5">
     <div class="max-w-3xl mx-auto px-4 py-5 flex items-center gap-3">
       <div class="w-10 h-10 rounded-xl bg-brand-500/20 flex items-center justify-center">
@@ -42,26 +40,15 @@ const HTML = `<!DOCTYPE html>
       </div>
     </div>
   </header>
-
   <main class="max-w-3xl mx-auto px-4 py-8 space-y-6">
-
-    <!-- ===== Monetag Top Banner Ad ===== -->
     <div id="ad-top" class="rounded-2xl overflow-hidden border border-white/10 bg-white/5 min-h-[90px] flex items-center justify-center">
-      <script>(function(s){s.dataset.zone='11854050',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+      <script>(function(s){s.dataset.zone='11854230',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
     </div>
-
     <section class="bg-white/5 rounded-2xl p-6 border border-white/10 backdrop-blur-sm">
       <label class="text-sm font-medium text-slate-400 mb-2 block">Your temporary email address</label>
       <div class="flex items-center gap-2">
         <div class="flex-1 flex items-center bg-slate-900/60 rounded-xl overflow-hidden">
-          <input
-            id="email-prefix"
-            type="text"
-            placeholder="type-a-prefix"
-            autocomplete="off"
-            spellcheck="false"
-            class="flex-1 bg-transparent px-4 py-3 text-lg font-mono text-brand-300 outline-none placeholder-slate-600 min-w-0"
-          />
+          <input id="email-prefix" type="text" placeholder="type-a-prefix" autocomplete="off" spellcheck="false" class="flex-1 bg-transparent px-4 py-3 text-lg font-mono text-brand-300 outline-none placeholder-slate-600 min-w-0" />
           <span id="email-suffix" class="px-3 py-3 text-lg font-mono text-slate-500 shrink-0 select-none">@toolmongy.store</span>
         </div>
         <button id="copy-btn" onclick="copyEmail()" class="shrink-0 px-4 py-3 rounded-xl bg-brand-600 hover:bg-brand-700 active:scale-95 transition text-white font-medium flex items-center gap-2">
@@ -84,7 +71,6 @@ const HTML = `<!DOCTYPE html>
         </span>
       </div>
     </section>
-
     <section>
       <div class="flex items-center justify-between mb-3">
         <h2 class="text-base font-semibold text-slate-300">Inbox</h2>
@@ -97,41 +83,30 @@ const HTML = `<!DOCTYPE html>
         </div>
       </div>
     </section>
-
-    <!-- ===== Monetag Middle Ad (Native/Display) ===== -->
     <div id="ad-middle" class="rounded-2xl overflow-hidden border border-white/10 bg-white/5 min-h-[250px] flex items-center justify-center">
-      <script>(function(s){s.dataset.zone='11854050',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+      <script>(function(s){s.dataset.zone='11854230',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
     </div>
-
   </main>
-
   <footer class="max-w-3xl mx-auto px-4 py-6 text-center text-xs text-slate-600">
     Powered by Cloudflare Workers · Emails are temporary and not stored permanently.
   </footer>
-
-  <!-- ===== Monetag Bottom Ad ===== -->
   <div id="ad-bottom" class="max-w-3xl mx-auto px-4 pb-6">
     <div class="rounded-2xl overflow-hidden border border-white/10 bg-white/5 min-h-[90px] flex items-center justify-center">
-      <script>(function(s){s.dataset.zone='11854050',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+      <script>(function(s){s.dataset.zone='11854230',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
     </div>
   </div>
-
   <script>
     let currentEmail = '';
     let pollTimer = null;
     let lastSignature = '';
-
     function generateRandom() {
       const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
       const len = Math.floor(Math.random() * 11) + 5;
       let prefix = '';
-      for (let i = 0; i < len; i++) {
-        prefix += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
+      for (let i = 0; i < len; i++) { prefix += chars.charAt(Math.floor(Math.random() * chars.length)); }
       document.getElementById('email-prefix').value = prefix;
       checkInbox();
     }
-
     function getCurrentEmail() {
       const prefix = document.getElementById('email-prefix').value.trim().toLowerCase().replace(/[^a-z0-9._-]/g, '');
       if (!prefix) return null;
@@ -139,7 +114,6 @@ const HTML = `<!DOCTYPE html>
       const domain = suffixEl ? suffixEl.textContent.replace('@', '').trim() : 'toolmongy.store';
       return prefix + '@' + domain;
     }
-
     function checkInbox() {
       const email = getCurrentEmail();
       if (!email) {
@@ -149,21 +123,16 @@ const HTML = `<!DOCTYPE html>
       }
       currentEmail = email;
       document.getElementById('email-prefix').value = email.split('@')[0];
-      document.getElementById('inbox').innerHTML =
-        '<div class="text-center py-16 text-slate-500"><svg class="w-12 h-12 mx-auto mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg><p class="text-sm">No emails yet. Your inbox is being monitored.</p></div>';
+      document.getElementById('inbox').innerHTML = '<div class="text-center py-16 text-slate-500"><svg class="w-12 h-12 mx-auto mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg><p class="text-sm">No emails yet. Your inbox is being monitored.</p></div>';
       document.getElementById('inbox-count').textContent = '0 messages';
       document.getElementById('status').innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> Waiting for emails…';
       if (pollTimer) clearInterval(pollTimer);
       pollTimer = setInterval(fetchEmails, 5000);
       fetchEmails();
     }
-
     async function copyEmail() {
       const email = getCurrentEmail();
-      if (!email) {
-        document.getElementById('email-prefix').focus();
-        return;
-      }
+      if (!email) { document.getElementById('email-prefix').focus(); return; }
       try {
         await navigator.clipboard.writeText(email);
         document.getElementById('copy-label').textContent = 'Copied!';
@@ -179,20 +148,8 @@ const HTML = `<!DOCTYPE html>
         setTimeout(() => { document.getElementById('copy-label').textContent = 'Copy'; }, 2000);
       }
     }
-
-    function escapeHtml(str) {
-      const div = document.createElement('div');
-      div.textContent = str || '';
-      return div.innerHTML;
-    }
-
-    function formatTime(ts) {
-      try {
-        const d = new Date(typeof ts === 'number' ? ts * 1000 : ts);
-        return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      } catch { return ''; }
-    }
-
+    function escapeHtml(str) { const div = document.createElement('div'); div.textContent = str || ''; return div.innerHTML; }
+    function formatTime(ts) { try { const d = new Date(typeof ts === 'number' ? ts * 1000 : ts); return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); } catch { return ''; } }
     function sanitizeHtml(html) {
       const div = document.createElement('div');
       div.innerHTML = html;
@@ -204,25 +161,18 @@ const HTML = `<!DOCTYPE html>
           if (attr === 'style') el.removeAttribute(attr);
         }
       });
-      div.querySelectorAll('a').forEach(function(a) {
-        a.setAttribute('target', '_blank');
-        a.setAttribute('rel', 'noopener noreferrer');
-        a.className = 'text-brand-400 underline hover:text-brand-300';
-      });
+      div.querySelectorAll('a').forEach(function(a) { a.setAttribute('target', '_blank'); a.setAttribute('rel', 'noopener noreferrer'); a.className = 'text-brand-400 underline hover:text-brand-300'; });
       return div.innerHTML;
     }
-
     async function fetchEmails() {
       if (!currentEmail) return;
       try {
         const res = await fetch('/get-email?to=' + encodeURIComponent(currentEmail));
         const data = await res.json();
         const emails = Array.isArray(data) ? data : (data.emails || data.messages || []);
-
         const sig = emails.map(e => (e.from||'')+'|'+(e.subject||'')+'|'+(e.date||'')).join('||');
         if (sig === lastSignature) return;
         lastSignature = sig;
-
         if (emails.length > 0) {
           document.getElementById('status').innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-400"></span> ' + emails.length + ' message' + (emails.length > 1 ? 's' : '') + ' received';
           document.getElementById('inbox-count').textContent = emails.length + ' message' + (emails.length > 1 ? 's' : '');
@@ -236,27 +186,13 @@ const HTML = `<!DOCTYPE html>
             const isHtml = email.isHtml || /<[a-z][\s\S]*>/i.test(body);
             const card = document.createElement('div');
             card.className = 'fade-in bg-white/5 rounded-xl p-4 border border-white/10 hover:border-white/20 transition cursor-pointer';
-            card.innerHTML =
-              '<div class="flex items-start justify-between gap-3 mb-1">' +
-                '<div class="min-w-0">' +
-                  '<p class="text-sm font-semibold text-slate-200 truncate">' + escapeHtml(from) + '</p>' +
-                  '<p class="text-sm text-slate-400 truncate">' + escapeHtml(subject) + '</p>' +
-                '</div>' +
-                '<span class="text-xs text-slate-500 shrink-0">' + escapeHtml(formatTime(date)) + '</span>' +
-              '</div>' +
-              '<div class="mt-2 text-sm text-slate-400 line-clamp-2">' + escapeHtml(body.replace(/<[^>]*>/g, '').substring(0, 200)) + (body.length > 200 ? '…' : '') + '</div>';
+            card.innerHTML = '<div class="flex items-start justify-between gap-3 mb-1"><div class="min-w-0"><p class="text-sm font-semibold text-slate-200 truncate">' + escapeHtml(from) + '</p><p class="text-sm text-slate-400 truncate">' + escapeHtml(subject) + '</p></div><span class="text-xs text-slate-500 shrink-0">' + escapeHtml(formatTime(date)) + '</span></div><div class="mt-2 text-sm text-slate-400 line-clamp-2">' + escapeHtml(body.replace(/<[^>]*>/g, '').substring(0, 200)) + (body.length > 200 ? '…' : '') + '</div>';
             card.onclick = function() {
               const expanded = card.querySelector('.expanded-body');
-              if (expanded) {
-                expanded.remove();
-              } else {
+              if (expanded) { expanded.remove(); } else {
                 const full = document.createElement('div');
                 full.className = 'expanded-body mt-3 pt-3 border-t border-white/10 text-sm text-slate-300 break-words';
-                if (isHtml) {
-                  full.innerHTML = '<div class="email-content">' + sanitizeHtml(body) + '</div>';
-                } else {
-                  full.innerHTML = '<div class="whitespace-pre-wrap">' + escapeHtml(body) + '</div>';
-                }
+                if (isHtml) { full.innerHTML = '<div class="email-content">' + sanitizeHtml(body) + '</div>'; } else { full.innerHTML = '<div class="whitespace-pre-wrap">' + escapeHtml(body) + '</div>'; }
                 card.appendChild(full);
               }
             };
@@ -267,10 +203,7 @@ const HTML = `<!DOCTYPE html>
         document.getElementById('status').innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-400"></span> Connection error — retrying…';
       }
     }
-
-    document.getElementById('email-prefix').addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') checkInbox();
-    });
+    document.getElementById('email-prefix').addEventListener('keydown', function(e) { if (e.key === 'Enter') checkInbox(); });
   </script>
 </body>
 </html>`;
@@ -284,95 +217,49 @@ const CORS_HEADERS = {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-
-    if (request.method === 'OPTIONS') {
-      return new Response(null, { status: 204, headers: CORS_HEADERS });
-    }
-
+    if (request.method === 'OPTIONS') { return new Response(null, { status: 204, headers: CORS_HEADERS }); }
     if (url.pathname === '/' || url.pathname === '/index.html') {
-      return new Response(HTML, {
-        headers: { 'Content-Type': 'text/html; charset=utf-8', ...CORS_HEADERS },
-      });
+      return new Response(HTML, { headers: { 'Content-Type': 'text/html; charset=utf-8', ...CORS_HEADERS } });
     }
-
-    // Read emails from KV (same Worker, no external server needed)
     if (url.pathname === '/get-email') {
       const to = url.searchParams.get('to');
-      if (!to) {
-        return new Response(JSON.stringify({ error: 'Missing "to" parameter' }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
-        });
-      }
-
+      if (!to) { return new Response(JSON.stringify({ error: 'Missing "to" parameter' }), { status: 400, headers: { 'Content-Type': 'application/json', ...CORS_HEADERS } }); }
       const key = 'inbox:' + to.toLowerCase();
       const data = await env.MAIL_KV.get(key, 'json');
-
-      if (!data || !Array.isArray(data) || data.length === 0) {
-        return new Response(JSON.stringify([]), {
-          headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
-        });
-      }
-
-      return new Response(JSON.stringify(data), {
-        headers: { 'Content-Type': 'application/json', ...CORS_HEADERS },
-      });
+      if (!data || !Array.isArray(data) || data.length === 0) { return new Response(JSON.stringify([]), { headers: { 'Content-Type': 'application/json', ...CORS_HEADERS } }); }
+      return new Response(JSON.stringify(data), { headers: { 'Content-Type': 'application/json', ...CORS_HEADERS } });
     }
-
     return new Response('Not found', { status: 404, headers: CORS_HEADERS });
   },
-
-  // Email handler — called by Cloudflare email Routing when an email arrives
   async email(message, env, ctx) {
     try {
       const to = message.to.toLowerCase();
       const from = message.from || 'Unknown';
       const subject = message.headers.get('subject') || '(No subject)';
-
       const rawBody = await new Response(message.raw).text();
-
-      // Extract HTML body from MIME multipart message
       let body = '';
       let isHtml = false;
-
-      // Try to find HTML part in multipart/alternative
       const htmlMatch = rawBody.match(/Content-Type:\s*text\/html[\s\S]*?\r?\n\r?\n([\s\S]*?)(?:\r?\n--)/i);
       if (htmlMatch) {
         body = htmlMatch[1].trim();
-        // Decode quoted-printable
-        body = body.replace(/=\r?\n/g, '').replace(/=([0-9A-F]{2})/g, function(m, p1) {
-          return String.fromCharCode(parseInt(p1, 16));
-        });
+        body = body.replace(/=\r?\n/g, '').replace(/=([0-9A-F]{2})/g, function(m, p1) { return String.fromCharCode(parseInt(p1, 16)); });
         isHtml = true;
       } else {
-        // Try plain text part
         const textMatch = rawBody.match(/Content-Type:\s*text\/plain[\s\S]*?\r?\n\r?\n([\s\S]*?)(?:\r?\n--)/i);
         if (textMatch) {
           body = textMatch[1].trim();
-          body = body.replace(/=\r?\n/g, '').replace(/=([0-9A-F]{2})/g, function(m, p1) {
-            return String.fromCharCode(parseInt(p1, 16));
-          });
+          body = body.replace(/=\r?\n/g, '').replace(/=([0-9A-F]{2})/g, function(m, p1) { return String.fromCharCode(parseInt(p1, 16)); });
         } else {
-          // Not multipart — use raw body after headers
           const headerEnd = rawBody.indexOf('\r\n\r\n');
           body = headerEnd >= 0 ? rawBody.substring(headerEnd + 4) : rawBody;
           isHtml = /<[a-z][\s\S]*>/i.test(body);
         }
       }
-
-      const emailEntry = {
-        from: from,
-        subject: subject,
-        body: body.substring(0, 50000),
-        isHtml: isHtml,
-        date: new Date().toISOString(),
-      };
-
+      const emailEntry = { from: from, subject: subject, body: body.substring(0, 50000), isHtml: isHtml, date: new Date().toISOString() };
       const key = 'inbox:' + to;
       const existing = await env.MAIL_KV.get(key, 'json');
       const emails = Array.isArray(existing) ? existing : [];
       emails.push(emailEntry);
-
       const trimmed = emails.slice(-50);
       await env.MAIL_KV.put(key, JSON.stringify(trimmed), { expirationTtl: 86400 });
     } catch (err) {
