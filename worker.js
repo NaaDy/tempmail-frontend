@@ -41,9 +41,6 @@ const HTML = `<!DOCTYPE html>
     </div>
   </header>
   <main class="max-w-3xl mx-auto px-4 py-8 space-y-6">
-    <div id="ad-top" class="rounded-2xl overflow-hidden border border-white/10 bg-white/5 min-h-[90px] flex items-center justify-center">
-      <script>(function(s){s.dataset.zone='11854230',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
-    </div>
     <section class="bg-white/5 rounded-2xl p-6 border border-white/10 backdrop-blur-sm">
       <label class="text-sm font-medium text-slate-400 mb-2 block">Your temporary email address</label>
       <div class="flex items-center gap-2">
@@ -83,18 +80,10 @@ const HTML = `<!DOCTYPE html>
         </div>
       </div>
     </section>
-    <div id="ad-middle" class="rounded-2xl overflow-hidden border border-white/10 bg-white/5 min-h-[250px] flex items-center justify-center">
-      <script>(function(s){s.dataset.zone='11854230',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
-    </div>
   </main>
   <footer class="max-w-3xl mx-auto px-4 py-6 text-center text-xs text-slate-600">
     Powered by Cloudflare Workers · Emails are temporary and not stored permanently.
   </footer>
-  <div id="ad-bottom" class="max-w-3xl mx-auto px-4 pb-6">
-    <div class="rounded-2xl overflow-hidden border border-white/10 bg-white/5 min-h-[90px] flex items-center justify-center">
-      <script>(function(s){s.dataset.zone='11854230',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
-    </div>
-  </div>
   <script>
     let currentEmail = '';
     let pollTimer = null;
