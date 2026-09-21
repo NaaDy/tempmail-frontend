@@ -20,6 +20,7 @@ const HTML = `<!DOCTYPE html>
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
   <style>
     body { font-family: 'Inter', system-ui, sans-serif; }
     .fade-in { animation: fadeIn .3s ease-in; }
@@ -43,6 +44,11 @@ const HTML = `<!DOCTYPE html>
   </header>
 
   <main class="max-w-3xl mx-auto px-4 py-8 space-y-6">
+
+    <!-- ===== Monetag Top Banner Ad ===== -->
+    <div id="ad-top" class="rounded-2xl overflow-hidden border border-white/10 bg-white/5 min-h-[90px] flex items-center justify-center">
+      <script>(function(s){s.dataset.zone='11854050',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+    </div>
 
     <section class="bg-white/5 rounded-2xl p-6 border border-white/10 backdrop-blur-sm">
       <label class="text-sm font-medium text-slate-400 mb-2 block">Your temporary email address</label>
@@ -92,11 +98,23 @@ const HTML = `<!DOCTYPE html>
       </div>
     </section>
 
+    <!-- ===== Monetag Middle Ad (Native/Display) ===== -->
+    <div id="ad-middle" class="rounded-2xl overflow-hidden border border-white/10 bg-white/5 min-h-[250px] flex items-center justify-center">
+      <script>(function(s){s.dataset.zone='11854050',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+    </div>
+
   </main>
 
   <footer class="max-w-3xl mx-auto px-4 py-6 text-center text-xs text-slate-600">
     Powered by Cloudflare Workers · Emails are temporary and not stored permanently.
   </footer>
+
+  <!-- ===== Monetag Bottom Ad ===== -->
+  <div id="ad-bottom" class="max-w-3xl mx-auto px-4 pb-6">
+    <div class="rounded-2xl overflow-hidden border border-white/10 bg-white/5 min-h-[90px] flex items-center justify-center">
+      <script>(function(s){s.dataset.zone='11854050',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+    </div>
+  </div>
 
   <script>
     let currentEmail = '';
@@ -277,6 +295,7 @@ export default {
       });
     }
 
+    // Read emails from KV (same Worker, no external server needed)
     if (url.pathname === '/get-email') {
       const to = url.searchParams.get('to');
       if (!to) {
@@ -303,6 +322,7 @@ export default {
     return new Response('Not found', { status: 404, headers: CORS_HEADERS });
   },
 
+  // Email handler — called by Cloudflare email Routing when an email arrives
   async email(message, env, ctx) {
     try {
       const to = message.to.toLowerCase();
@@ -311,17 +331,21 @@ export default {
 
       const rawBody = await new Response(message.raw).text();
 
+      // Extract HTML body from MIME multipart message
       let body = '';
       let isHtml = false;
 
+      // Try to find HTML part in multipart/alternative
       const htmlMatch = rawBody.match(/Content-Type:\s*text\/html[\s\S]*?\r?\n\r?\n([\s\S]*?)(?:\r?\n--)/i);
       if (htmlMatch) {
         body = htmlMatch[1].trim();
+        // Decode quoted-printable
         body = body.replace(/=\r?\n/g, '').replace(/=([0-9A-F]{2})/g, function(m, p1) {
           return String.fromCharCode(parseInt(p1, 16));
         });
         isHtml = true;
       } else {
+        // Try plain text part
         const textMatch = rawBody.match(/Content-Type:\s*text\/plain[\s\S]*?\r?\n\r?\n([\s\S]*?)(?:\r?\n--)/i);
         if (textMatch) {
           body = textMatch[1].trim();
@@ -329,6 +353,7 @@ export default {
             return String.fromCharCode(parseInt(p1, 16));
           });
         } else {
+          // Not multipart — use raw body after headers
           const headerEnd = rawBody.indexOf('\r\n\r\n');
           body = headerEnd >= 0 ? rawBody.substring(headerEnd + 4) : rawBody;
           isHtml = /<[a-z][\s\S]*>/i.test(body);
@@ -355,3 +380,4 @@ export default {
     }
   },
 };
+انسخ الكود ده كله والصقه في محرر الـ Wor
