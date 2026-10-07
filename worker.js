@@ -45,8 +45,7 @@ const HTML = `<!DOCTYPE html>
       <label class="text-sm font-medium text-slate-400 mb-2 block">Your temporary email address</label>
       <div class="flex items-center gap-2">
         <div class="flex-1 flex items-center bg-slate-900/60 rounded-xl overflow-hidden">
-          <input id="email-prefix" type="text" placeholder="type-a-prefix" autocomplete="off" spellcheck="false" class="flex-1 bg-transparent px-4 py-3 text-lg font-mono text-brand-300 outline-none placeholder-slate-600 min-w-0" />
-          <span id="email-suffix" class="px-3 py-3 text-lg font-mono text-slate-500 shrink-0 select-none">@toolmongy.store</span>
+          <input id="email-prefix" type="text" placeholder="type-a-name" autocomplete="off" autocapitalize="off" spellcheck="false" class="flex-1 bg-transparent px-4 py-3 text-lg font-mono text-brand-300 outline-none placeholder-slate-600 min-w-0" />
         </div>
         <button id="copy-btn" onclick="copyEmail()" class="shrink-0 px-4 py-3 rounded-xl bg-brand-600 hover:bg-brand-700 active:scale-95 transition text-white font-medium flex items-center gap-2">
           <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
@@ -64,7 +63,7 @@ const HTML = `<!DOCTYPE html>
         </button>
         <span class="text-slate-600">•</span>
         <span id="status" class="text-slate-500 flex items-center gap-1.5">
-          <span class="w-2 h-2 rounded-full bg-slate-500"></span> Enter a prefix and check
+          <span class="w-2 h-2 rounded-full bg-slate-500"></span> Enter a name and check
         </span>
       </div>
     </section>
@@ -76,7 +75,7 @@ const HTML = `<!DOCTYPE html>
       <div id="inbox" class="space-y-3">
         <div id="empty-state" class="text-center py-16 text-slate-500">
           <svg class="w-12 h-12 mx-auto mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
-          <p class="text-sm">Type a prefix above and click "Check inbox" to view emails.</p>
+          <p class="text-sm">Type a name above and click "Check inbox" to view emails.</p>
         </div>
       </div>
     </section>
@@ -85,9 +84,13 @@ const HTML = `<!DOCTYPE html>
     Powered by Cloudflare Workers · Emails are temporary and not stored permanently.
   </footer>
   <script>
+    const DOMAIN = 'toolmongy.store';
+    const POLL_MS = 3000;
     let currentEmail = '';
     let pollTimer = null;
     let lastSignature = '';
+    let fetching = false;
+
     function generateRandom() {
       const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
       const len = Math.floor(Math.random() * 11) + 5;
@@ -96,29 +99,49 @@ const HTML = `<!DOCTYPE html>
       document.getElementById('email-prefix').value = prefix;
       checkInbox();
     }
+
+    // Smart: the field holds only the name. The domain is appended automatically,
+    // unless the user typed/pasted a full email (then we use it as-is).
     function getCurrentEmail() {
-      const prefix = document.getElementById('email-prefix').value.trim().toLowerCase().replace(/[^a-z0-9._-]/g, '');
-      if (!prefix) return null;
-      const suffixEl = document.getElementById('email-suffix');
-      const domain = suffixEl ? suffixEl.textContent.replace('@', '').trim() : 'toolmongy.store';
-      return prefix + '@' + domain;
+      const raw = document.getElementById('email-prefix').value.trim().toLowerCase();
+      if (!raw) return null;
+      const clean = function(s) { return s.replace(/[^a-z0-9._-]/g, ''); };
+      if (raw.indexOf('@') !== -1) {
+        const parts = raw.split('@');
+        const name = clean(parts[0]);
+        if (!name) return null;
+        return name + '@' + DOMAIN;
+      }
+      const name = clean(raw);
+      if (!name) return null;
+      return name + '@' + DOMAIN;
     }
+
     function checkInbox() {
       const email = getCurrentEmail();
       if (!email) {
-        document.getElementById('status').innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-400"></span> Please enter a prefix';
+        document.getElementById('status').innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-400"></span> Please enter a name';
         document.getElementById('email-prefix').focus();
         return;
       }
       currentEmail = email;
+      lastSignature = '';
       document.getElementById('email-prefix').value = email.split('@')[0];
       document.getElementById('inbox').innerHTML = '<div class="text-center py-16 text-slate-500"><svg class="w-12 h-12 mx-auto mb-3 opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg><p class="text-sm">No emails yet. Your inbox is being monitored.</p></div>';
       document.getElementById('inbox-count').textContent = '0 messages';
       document.getElementById('status').innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> Waiting for emails…';
-      if (pollTimer) clearInterval(pollTimer);
-      pollTimer = setInterval(fetchEmails, 5000);
+      startPolling();
       fetchEmails();
     }
+
+    function startPolling() {
+      if (pollTimer) clearInterval(pollTimer);
+      pollTimer = setInterval(function() { if (!document.hidden) fetchEmails(); }, POLL_MS);
+    }
+
+    // Refresh immediately when the user comes back to the tab
+    document.addEventListener('visibilitychange', function() { if (!document.hidden && currentEmail) fetchEmails(); });
+
     async function copyEmail() {
       const email = getCurrentEmail();
       if (!email) { document.getElementById('email-prefix').focus(); return; }
@@ -137,6 +160,7 @@ const HTML = `<!DOCTYPE html>
         setTimeout(() => { document.getElementById('copy-label').textContent = 'Copy'; }, 2000);
       }
     }
+
     function escapeHtml(str) { const div = document.createElement('div'); div.textContent = str || ''; return div.innerHTML; }
     function formatTime(ts) { try { const d = new Date(typeof ts === 'number' ? ts * 1000 : ts); return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); } catch { return ''; } }
     function sanitizeHtml(html) {
@@ -153,11 +177,15 @@ const HTML = `<!DOCTYPE html>
       div.querySelectorAll('a').forEach(function(a) { a.setAttribute('target', '_blank'); a.setAttribute('rel', 'noopener noreferrer'); a.className = 'text-brand-400 underline hover:text-brand-300'; });
       return div.innerHTML;
     }
+
     async function fetchEmails() {
-      if (!currentEmail) return;
+      if (!currentEmail || fetching) return;
+      fetching = true;
+      const requested = currentEmail;
       try {
-        const res = await fetch('/get-email?to=' + encodeURIComponent(currentEmail));
+        const res = await fetch('/get-email?to=' + encodeURIComponent(requested) + '&t=' + Date.now(), { cache: 'no-store' });
         const data = await res.json();
+        if (requested !== currentEmail) return; // address changed while waiting
         const emails = Array.isArray(data) ? data : (data.emails || data.messages || []);
         const sig = emails.map(e => (e.from||'')+'|'+(e.subject||'')+'|'+(e.date||'')).join('||');
         if (sig === lastSignature) return;
@@ -172,7 +200,7 @@ const HTML = `<!DOCTYPE html>
             const subject = email.subject || '(No subject)';
             const body = email.body || email.text || email.html || '';
             const date = email.date || email.timestamp || '';
-            const isHtml = email.isHtml || /<[a-z][\s\S]*>/i.test(body);
+            const isHtml = email.isHtml || /<[a-z][\\s\\S]*>/i.test(body);
             const card = document.createElement('div');
             card.className = 'fade-in bg-white/5 rounded-xl p-4 border border-white/10 hover:border-white/20 transition cursor-pointer';
             card.innerHTML = '<div class="flex items-start justify-between gap-3 mb-1"><div class="min-w-0"><p class="text-sm font-semibold text-slate-200 truncate">' + escapeHtml(from) + '</p><p class="text-sm text-slate-400 truncate">' + escapeHtml(subject) + '</p></div><span class="text-xs text-slate-500 shrink-0">' + escapeHtml(formatTime(date)) + '</span></div><div class="mt-2 text-sm text-slate-400 line-clamp-2">' + escapeHtml(body.replace(/<[^>]*>/g, '').substring(0, 200)) + (body.length > 200 ? '…' : '') + '</div>';
@@ -190,8 +218,11 @@ const HTML = `<!DOCTYPE html>
         }
       } catch (err) {
         document.getElementById('status').innerHTML = '<span class="w-2 h-2 rounded-full bg-rose-400"></span> Connection error — retrying…';
+      } finally {
+        fetching = false;
       }
     }
+
     document.getElementById('email-prefix').addEventListener('keydown', function(e) { if (e.key === 'Enter') checkInbox(); });
   </script>
 </body>
@@ -203,6 +234,23 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
+const JSON_HEADERS = {
+  'Content-Type': 'application/json',
+  'Cache-Control': 'no-store, max-age=0',
+  ...CORS_HEADERS,
+};
+
+// ---- D1 storage (instant consistency, unlike KV which can lag up to ~60s) ----
+let tableReady = false;
+async function ensureTable(env) {
+  if (tableReady) return;
+  await env.DB.batch([
+    env.DB.prepare('CREATE TABLE IF NOT EXISTS emails (id INTEGER PRIMARY KEY AUTOINCREMENT, to_addr TEXT NOT NULL, from_addr TEXT, subject TEXT, body TEXT, is_html INTEGER DEFAULT 0, date TEXT, created_at INTEGER)'),
+    env.DB.prepare('CREATE INDEX IF NOT EXISTS idx_emails_to ON emails (to_addr, id)'),
+  ]);
+  tableReady = true;
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -212,11 +260,20 @@ export default {
     }
     if (url.pathname === '/get-email') {
       const to = url.searchParams.get('to');
-      if (!to) { return new Response(JSON.stringify({ error: 'Missing "to" parameter' }), { status: 400, headers: { 'Content-Type': 'application/json', ...CORS_HEADERS } }); }
-      const key = 'inbox:' + to.toLowerCase();
-      const data = await env.MAIL_KV.get(key, 'json');
-      if (!data || !Array.isArray(data) || data.length === 0) { return new Response(JSON.stringify([]), { headers: { 'Content-Type': 'application/json', ...CORS_HEADERS } }); }
-      return new Response(JSON.stringify(data), { headers: { 'Content-Type': 'application/json', ...CORS_HEADERS } });
+      if (!to) { return new Response(JSON.stringify({ error: 'Missing "to" parameter' }), { status: 400, headers: JSON_HEADERS }); }
+      try {
+        await ensureTable(env);
+        const { results } = await env.DB.prepare(
+          'SELECT from_addr, subject, body, is_html, date FROM (SELECT id, from_addr, subject, body, is_html, date FROM emails WHERE to_addr = ? ORDER BY id DESC LIMIT 50) ORDER BY id ASC'
+        ).bind(to.toLowerCase()).all();
+        const emails = (results || []).map(function(r) {
+          return { from: r.from_addr, subject: r.subject, body: r.body, isHtml: !!r.is_html, date: r.date };
+        });
+        return new Response(JSON.stringify(emails), { headers: JSON_HEADERS });
+      } catch (err) {
+        console.error('GET-EMAIL ERROR:', err.message);
+        return new Response(JSON.stringify([]), { headers: JSON_HEADERS });
+      }
     }
     return new Response('Not found', { status: 404, headers: CORS_HEADERS });
   },
@@ -244,13 +301,16 @@ export default {
           isHtml = /<[a-z][\s\S]*>/i.test(body);
         }
       }
-      const emailEntry = { from: from, subject: subject, body: body.substring(0, 50000), isHtml: isHtml, date: new Date().toISOString() };
-      const key = 'inbox:' + to;
-      const existing = await env.MAIL_KV.get(key, 'json');
-      const emails = Array.isArray(existing) ? existing : [];
-      emails.push(emailEntry);
-      const trimmed = emails.slice(-50);
-      await env.MAIL_KV.put(key, JSON.stringify(trimmed), { expirationTtl: 86400 });
+      await ensureTable(env);
+      const now = Date.now();
+      // Single atomic insert: no read-modify-write, so no lost emails and no delay
+      await env.DB.prepare(
+        'INSERT INTO emails (to_addr, from_addr, subject, body, is_html, date, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
+      ).bind(to, from, subject, body.substring(0, 50000), isHtml ? 1 : 0, new Date(now).toISOString(), now).run();
+      // Cleanup of emails older than 24h, in the background (doesn't slow delivery)
+      ctx.waitUntil(
+        env.DB.prepare('DELETE FROM emails WHERE created_at < ?').bind(now - 86400000).run().catch(function() {})
+      );
     } catch (err) {
       console.error('EMAIL HANDLER ERROR:', err.message);
     }
