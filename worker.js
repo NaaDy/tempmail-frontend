@@ -1,3 +1,5 @@
+import PostalMime from 'postal-mime';
+
 const HTML = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -280,27 +282,15 @@ export default {
   async email(message, env, ctx) {
     try {
       const to = message.to.toLowerCase();
-      const from = message.from || 'Unknown';
-      const subject = message.headers.get('subject') || '(No subject)';
-      const rawBody = await new Response(message.raw).text();
-      let body = '';
-      let isHtml = false;
-      const htmlMatch = rawBody.match(/Content-Type:\s*text\/html[\s\S]*?\r?\n\r?\n([\s\S]*?)(?:\r?\n--)/i);
-      if (htmlMatch) {
-        body = htmlMatch[1].trim();
-        body = body.replace(/=\r?\n/g, '').replace(/=([0-9A-F]{2})/g, function(m, p1) { return String.fromCharCode(parseInt(p1, 16)); });
-        isHtml = true;
-      } else {
-        const textMatch = rawBody.match(/Content-Type:\s*text\/plain[\s\S]*?\r?\n\r?\n([\s\S]*?)(?:\r?\n--)/i);
-        if (textMatch) {
-          body = textMatch[1].trim();
-          body = body.replace(/=\r?\n/g, '').replace(/=([0-9A-F]{2})/g, function(m, p1) { return String.fromCharCode(parseInt(p1, 16)); });
-        } else {
-          const headerEnd = rawBody.indexOf('\r\n\r\n');
-          body = headerEnd >= 0 ? rawBody.substring(headerEnd + 4) : rawBody;
-          isHtml = /<[a-z][\s\S]*>/i.test(body);
-        }
-      }
+      // Proper MIME parsing: handles base64 / quoted-printable, encoded subjects
+      // (=?UTF-8?B?...?=), and any charset (UTF-8, windows-1251, koi8-r, ...)
+      const rawBuf = await new Response(message.raw).arrayBuffer();
+      const parsed = await new PostalMime().parse(rawBuf);
+      const sender = parsed.from && (parsed.from.address || parsed.from.name);
+      const from = sender ? (parsed.from.name ? parsed.from.name + ' <' + parsed.from.address + '>' : sender) : (message.from || 'Unknown');
+      const subject = parsed.subject || '(No subject)';
+      const isHtml = !!parsed.html;
+      const body = parsed.html || parsed.text || '';
       await ensureTable(env);
       const now = Date.now();
       // Single atomic insert: no read-modify-write, so no lost emails and no delay
